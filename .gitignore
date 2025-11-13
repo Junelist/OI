@@ -1,0 +1,22 @@
+# --- Ignore all compiled C++ executables ---
+*.exe
+
+# --- Ignore LaTeX build artifacts ---
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.synctex.gz
+*.toc
+*.out
+*.bbl
+
+
+
+# --- Keep your main .tex and .pdf files under version control ---
+# If you want to ignore all generated PDFs except certain ones:
+# *.pdf
+# !latex/main.pdf
+
+# --- System/editor files (optional but useful) ---
+.vscode/

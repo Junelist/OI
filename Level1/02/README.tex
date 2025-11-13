@@ -1,0 +1,162 @@
+\documentclass{article}
+\usepackage{ctex}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{amsmath}
+\usepackage{float}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\lstset{
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue},
+    commentstyle=\color{codegreen},
+    stringstyle=\color{codepurple},
+    numbers=left,
+    numberstyle=\tiny\color{codegray},
+    frame=tb,
+    tabsize=4,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true
+}
+
+\title{算法入门-贪心算法}
+\author{Junlist}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{贪心算法概述}
+
+贪心算法（又称贪婪算法）是指，在对问题求解时，总是做出在当前看来是最好的选择。也就是说，不从整体最优上加以考虑，算法得到的是在某种意义上的局部最优解。
+
+贪心算法不是对所有问题都能得到整体最优解，关键是贪心策略的选择。
+
+\subsection{贪心算法的基本步骤}
+贪心算法一般按如下步骤进行：
+
+\begin{enumerate}
+    \item 建立数学模型来描述问题
+    \item 把求解的问题分成若干个子问题
+    \item 对每个子问题求解，得到子问题的局部最优解
+    \item 把子问题的解局部最优解合成原来问题的一个解
+\end{enumerate}
+
+\subsection{贪心算法的正确性证明}
+
+在使用贪心算法解决问题时，\textbf{必须证明贪心策略的正确性}。贪心算法的难点在于如何证明其选择策略能得到全局最优解。
+
+\subsubsection{数学归纳法}
+\begin{itemize}
+    \item 先验证最小规模（如 $n=1$）时成立
+    \item 再证明 $n$ 成立时 $n+1$ 也成立
+\end{itemize}
+
+\subsubsection{交换论证法}
+\begin{itemize}
+    \item 假设存在更优解
+    \item 通过交换局部选择，如果不会得到更优结果
+    \item 则当前贪心解为最优
+\end{itemize}
+
+实际做题时，通常不要求严格证明。判断是否可用贪心算法，可以通过：
+
+\begin{itemize}
+    \item \textbf{直觉尝试}：先用贪心思路做一遍，看看局部最优能否推出全局最优
+    \item \textbf{举反例}：尝试构造反例，如果找不到局部最优导致全局最优失败的例子，基本可以用贪心法
+\end{itemize}
+
+贪心算法是一种极其灵活的算法，但也意味着对其的应用存在一定风险。
+例如在做简单的壹角、伍分、壹分的找零问题时候我们可以使用每次选择面值最大的硬币这个贪心策略。
+但面对同样的找零问题如果硬币换为壹角壹分、伍分、壹分便不可使用。
+
+\section{Havel-Hakimi定理}
+
+\subsection{定理描述}
+设 $d = (d_1, d_2, \ldots, d_n)$ 是一个非增的非负整数序列，其中 $d_1 \geq d_2 \geq \cdots \geq d_n$。该序列可图化当且仅当：
+
+\begin{enumerate}
+    \item $d_1 \leq n-1$
+    \item 序列 $d' = (d_2 - 1, d_3 - 1, \ldots, d_{d_1+1} - 1, d_{d_1+2}, \ldots, d_n)$ 可图化
+\end{enumerate}
+
+\subsection{Havel-Hakimi算法}
+\begin{algorithm}[H]
+\caption{Havel-Hakimi算法：判断度序列是否可图化}
+\begin{algorithmic}[1]
+\Procedure{HavelHakimi}{$d$}
+\State 将序列 $d$ 按非递增顺序排序
+\While{序列不为全零序列}
+    \If{序列中存在负数}
+        \State \Return \text{不可图化}
+    \EndIf
+    \If{第一个元素 $d_1$ 大于剩余元素个数}
+        \State \Return \text{不可图化}
+    \EndIf
+    \For{$i \gets 2$ to $d_1 + 1$}
+        \State $d_i \gets d_i - 1$
+    \EndFor
+    \State 移除第一个元素 $d_1$
+    \State 重新排序序列为非递增顺序
+\EndWhile
+\State \Return \text{可图化}
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\section{C++中的sort()函数}
+
+\subsection{sort()函数概述}
+C++标准库中的\texttt{sort()}函数是\texttt{<algorithm>}头文件中提供的快速排序实现，具有$O(n \log n)$的时间复杂度。
+\texttt{sort()}函数主要有两种重载形式：
+
+\begin{lstlisting}[language=C++, caption=sort函数的两种形式]
+template <class RandomAccessIterator>
+void sort(RandomAccessIterator first, RandomAccessIterator last);
+
+template <class RandomAccessIterator, class Compare>
+void sort(RandomAccessIterator first, RandomAccessIterator last, Compare comp);
+\end{lstlisting}
+
+\paragraph{参数说明：}
+\begin{itemize}
+    \item \textbf{first}：随机访问迭代器，指向要排序序列的\textbf{第一个元素}
+    \item \textbf{last}：随机访问迭代器，指向要排序序列的\textbf{最后一个元素的下一个位置}
+    \item \textbf{comp}：二元谓词（比较函数），定义排序规则（可选参数）
+\end{itemize}
+\paragraph{first 和 last 参数}
+\begin{itemize}
+    \item \textbf{类型}：必须满足随机访问迭代器（RandomAccessIterator）
+    \item \textbf{支持的容器}：vector, deque, array, 普通数组等
+    \item \textbf{范围}：排序区间为 $[first, last)$，即包含first，不包含last
+\end{itemize}
+
+\subsection{comp()函数定义}
+
+comp函数（比较函数）是一个二元谓词（Binary Predicate），接收两个参数并返回一个布尔值。
+其是C++标准库排序算法中的核心组件，其有三种形式：普通函数、函数对象（仿函数）、Lambda表达式，它定义了元素之间的排序规则。
+正确理解和定义comp函数对于使用\texttt{sort()}等算法至关重要。
+\begin{lstlisting}[language=C++]
+bool comp(const Type& a, const Type& b) {
+    // return true if a should come before b
+    // return false otherwise
+}
+\end{lstlisting}
+
+
+\subsubsection{严格弱序要求}
+
+comp函数必须满足\textbf{严格弱序}（Strict Weak Ordering）的数学要求：
+
+\begin{itemize}
+    \item \textbf{非自反性}：对于任何元素a，\texttt{comp(a, a)} 必须返回 \texttt{false}
+    \item \textbf{反对称性}：如果 \texttt{comp(a, b)} 为 \texttt{true}，则 \texttt{comp(b, a)} 必须为 \texttt{false}
+    \item \textbf{传递性}：如果 \texttt{comp(a, b)} 为 \texttt{true} 且 \texttt{comp(b, c)} 为 \texttt{true}，则 \texttt{comp(a, c)} 必须为 \texttt{true}
+    \item \textbf{等价传递性}：如果 \texttt{!comp(a, b) \&\& !comp(b, a)} 且 \texttt{!comp(b, c) \&\& !comp(c, b)}，则 \texttt{!comp(a, c) \&\& !comp(c, a)}
+\end{itemize}
+\end{document}
