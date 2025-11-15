@@ -12,11 +12,5 @@
 *.bbl
 
 
-
-# --- Keep your main .tex and .pdf files under version control ---
-# If you want to ignore all generated PDFs except certain ones:
-# *.pdf
-# !latex/main.pdf
-
 # --- System/editor files (optional but useful) ---
 .vscode/
