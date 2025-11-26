@@ -1,0 +1,285 @@
+\documentclass{article}
+\usepackage{ctex}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{amsmath}
+\usepackage{float}
+\usepackage{forest}
+\usepackage{tikz}
+\useforestlibrary{edges}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\lstset{
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue},
+    commentstyle=\color{codegreen},
+    stringstyle=\color{codepurple},
+    numbers=left,
+    numberstyle=\tiny\color{codegray},
+    frame=tb,
+    tabsize=4,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true
+}
+
+\title{算法入门-并查集}
+\author{Junlist}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{什么是并查集?}
+
+并查集（Disjoint-Set Union）是一种用于处理不相交集合合并与查询的数据结构，它支持两种核心操作：查找（确定元素属于哪个集合）和合并（将两个集合合并为一个）。
+通过维护一棵逻辑树结构，其中每个节点指向其父节点。在实际的算法实现时，我们常常用数组来模拟这种逻辑上的树。
+
+\section{两种并查集}
+
+\subsection{第一种并查集}
+
+\begin{itemize}
+    \item 用编号最小的元素标记所在集合；
+    \item 定义一个数组 Set[1..n]，其中Set[i] 表示元素i所在的集合；
+\end{itemize}
+
+\begin{center}
+\begin{tabular}{|c|*{10}{c|}}
+\hline
+Set(i) & 1 & 2 & 1 & 4 & 2 & 6 & 1 & 6 & 2 & 2 \\
+\hline
+i & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10 \\
+\hline
+\end{tabular}
+\end{center}
+
+不相交集合：$\{1,3,7\}$, $\{4\}$, $\{2,5,9,10\}$, $\{6,8\}$
+
+这种方式下的查找与合并的函数分别是：
+\begin{lstlisting}[language=C++, caption={find}]
+int find(int x)
+{
+    return Set[x];
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=C++, caption={merge}]
+void merge(int a, int b)
+{
+    int i = min(Set[a], Set[b]);
+    int j = max(Set[a], Set[b]);
+
+    for(int k = 0; k < size; ++k)
+    {
+        if(Set[k] == j)
+        {
+            Set[k] = i;
+        }
+    }
+}
+\end{lstlisting}
+
+我们很容易知道在以这种方式实现的并查集 $find$ 这个函数的时间复杂度为 $O(1)$,而 $merge$ 函数无论并查集的逻辑形式如何其时间复杂度统一为 $O(n)$。
+这是我们无法再继续优化的，当面对大量数据的合并工作时可能会超时。
+
+\subsection{第二种并查集}
+
+每个集合用一棵"有根树"表示，定义数组 Set[1..n]
+
+\begin{itemize}
+    \item Set[i] = i，则i表示本集合，若是集合对应树的根
+    \item Set[i] = j，若j不等于i，则j是i的父节点
+\end{itemize}
+
+\begin{center}
+\begin{tabular}{|c|*{10}{c|}}
+\hline
+Set(i) & 1 & 2 & 3 & 2 & 1 & 3 & 4 & 3 & 3 & 4 \\
+\hline
+i & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10 \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{ccc}
+
+\begin{forest}
+  for tree={circle, draw, minimum size=2.5ex, inner sep=1pt, s sep=15pt}
+  [1
+    [5, edge=<-]
+  ]
+\end{forest}
+&
+\begin{forest}
+  for tree={circle, draw, minimum size=2.5ex, inner sep=1pt, s sep=15pt}
+  [2
+    [4, edge=<-
+      [7, edge=<-]
+      [10, edge=<-]
+    ]
+  ]
+\end{forest}
+&
+\begin{forest}
+  for tree={circle, draw, minimum size=2.5ex, inner sep=1pt, s sep=15pt}
+  [3
+    [6, edge=<-]
+    [8, edge=<-]
+    [9, edge=<-]
+  ]
+\end{forest}
+
+\end{tabular}
+\end{center}
+
+这种方式下的查找与合并的函数分别是：
+\begin{lstlisting}[language=C++, caption={find}]
+int find(int x)
+{
+    while(Set[x] != x)
+    {
+        x = Set[x];
+    }
+    return x;
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=C++, caption={merge}]
+void merge(int a, int b)
+{
+    Set[a] = b;
+}
+\end{lstlisting}
+
+在这种情况下我们不难发现 $merge$ 函数的时间复杂度为 $O(1)$ ，而此时的 $find$ 操作的空间复杂度的最差情况是当 $Set$ 的逻辑结构为链状树的时候其时间复杂度为 $O(n)$。
+但是这种情况下我们有优化的空间，我们可以在查找或者合并的过程中改变树的结构让其下一次查找变得更加迅速：
+
+\subsubsection{按秩合并(不常用)}
+
+\textbf{方法：}将深度小的树合并到深度大的树
+
+\textbf{实现：}假设两棵树的深度分别为$h_1$和$h_2$，则合并后的树的高度$h$是：
+
+\[
+h = \begin{cases}
+\max(h_1, h_2), & \text{若 } h_1 \neq h_2 \\
+h_1 + 1, & \text{若 } h_1 = h_2
+\end{cases}
+\]
+
+\textbf{效果：}任意顺序的合并操作以后，包含$k$个节点的树的最大高度不超过$\lfloor \log k \rfloor$ 。
+
+这种优化下的查找与合并的函数分别是：
+\begin{lstlisting}[language=C++, caption={find}]
+int find(int x)
+{
+    while(Set[x] != x)
+    {
+        x = Set[x];
+    }
+    return x;
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=C++, caption={merge}]
+void merge(int a, int b)
+{
+    if (Height[a] == Height[b])
+    {
+        Height[a] += 1;
+        Set[b] = a;
+    }
+    else if (Height[a] < Height[b])
+    {
+        Set[a] = b;
+    }
+    else
+    {
+        Set[b] = a;
+    }
+    Height[a] = Height[b] = max(Height[a], Height[b]);
+}
+\end{lstlisting}
+
+经过我们对 $merge$ 逻辑的修改我们可以在不改变整体树的逻辑意义而将 $find$ 的时间复杂度由 $O(n)$ 降低至 $O(\log n)$。
+但是由于这种逻辑下我们需要维护更多的信息而且其真正意义上的实现十分不便所以我们不常用。
+
+\subsubsection{路径压缩}
+
+\begin{itemize}
+    \item \textbf{解决思想：}每次查找的时候，如果路径较长，则修改信息，以便下次查找的时候速度更快
+    \item \textbf{具体方案：}第一步，找到根结点。第二步，修改查找路径上的所有节点，将它们都指向根结点
+\end{itemize}
+
+这种优化下的查找与合并的函数分别是：
+\begin{lstlisting}[language=C++, caption={find}]
+int find(int x)
+{
+    if(Set[x] != x)
+    {
+        Set[x] = find(Set[x]);
+    }
+    return Set[x];
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=C++, caption={merge}]
+void merge(int a, int b)
+{
+    int fa = find(a);
+    int fb = find(b);
+    
+    if(fa != fb)
+    {
+        Set[fa] = fb;
+    }
+}
+\end{lstlisting}
+
+在这种优化下我们边查找某一个节点的祖先，查找这个节点的祖先的路径中的节点均会在经历一次查找后均指向其祖先节点，在经历多次合并和查找后可认为二者的时间复杂度均为 $O(1)$。
+
+\section{KursKal最小生成树算法}
+
+Kruskal算法是一种用于在加权连通图中寻找最小生成树的算法。
+该算法的目标是找出图中边的子集，使得这些边构成的树包含图中的所有顶点，并且树的总权值（边的权值之和）最小。
+
+\textbf{算法步骤：}
+
+\begin{enumerate}
+    \item 将图中的所有边按权值从小到大排序。
+    \item 初始化一个空的最小生成树，开始时最小生成树不包含任何边。
+    \item 遍历排序后的边，对于每条边，如果它连接的两个顶点属于不同的连通分量，则将它加入最小生成树中，并合并这两个顶点所在的连通分量。
+    \item 重复步骤3，直到最小生成树中包含所有顶点或者已经选择了$n-1$条边（$n$是顶点的数量）。
+\end{enumerate}
+
+\begin{algorithm}[H]
+\caption{Kruskal算法：求解最小生成树}
+\begin{algorithmic}[1]
+\Procedure{Kruskal}{$G(V, E)$}
+\State 将边集 $E$ 按权重从小到大排序
+\State 初始化并查集，每个顶点自成一个集合
+\State $MST \gets \emptyset$ \Comment{最小生成树的边集}
+\State $edgesAdded \gets 0$ \Comment{已添加的边数}
+
+\For{每条边 $(u, v, w)$ 按权重从小到大顺序}
+    \If{$edgesAdded = |V| - 1$}
+        \State \textbf{break} \Comment{已找到最小生成树}
+    \EndIf
+    \If{$\text{Find}(u) \neq \text{Find}(v)$} \Comment{$u$和$v$不在同一连通分量}
+        \State $\text{Union}(u, v)$ \Comment{合并两个连通分量}
+        \State $MST \gets MST \cup \{(u, v, w)\}$
+        \State $edgesAdded \gets edgesAdded + 1$
+    \EndIf
+\EndFor
+\State \Return $MST$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\end{document}
